@@ -3,60 +3,65 @@
 /* constructor definition */
 TicTacToe::TicTacToe()
     :   isTurnOfX(true), diagLeftCounter(0), diagRightCounter(0),
-        rFlag(false), cFlag(false), dlFlag(false), drFlag(false)
+        rFlag(false), cFlag(false), dlFlag(false), drFlag(false), 
+        moveStack()
 {
     board = board_t(BOARD_SIZE, boardrow_t(BOARD_SIZE, ' '));
     rowCounter = std::vector<int>(BOARD_SIZE, 0);
     colCounter = std::vector<int>(BOARD_SIZE, 0);
 }
 
-bool TicTacToe::makeMove(short x, short y)
+char TicTacToe::get(COORD coord) const
+{
+    return board.at(coord.Y).at(coord.X);
+}
+
+bool TicTacToe::makeMove(COORD coord)
 {
     /* unable to move because the cell is occupied */
-    if(board.at(y).at(x) != ' ') { return false; }
+    if(this->get(coord) != ' ') { return false; }
 
-    board.at(y).at(x) = (isTurnOfX) ? 'x' : 'o';
+    board.at(coord.Y).at(coord.X) = (isTurnOfX) ? 'x' : 'o';
+    moveStack.push(coord);
 
-    rowCounter.at(y) += (isTurnOfX) ? 1 : -1;
-    colCounter.at(x) += (isTurnOfX) ? 1 : -1;
-    if(x == y) { diagLeftCounter += (isTurnOfX) ? 1 : -1; }
-    if((x + y) == 2) { diagRightCounter += (isTurnOfX) ? 1 : -1; }
+    rowCounter.at(coord.Y) += (isTurnOfX) ? 1 : -1;
+    colCounter.at(coord.X) += (isTurnOfX) ? 1 : -1;
+    if(coord.X == coord.Y) { diagLeftCounter += (isTurnOfX) ? 1 : -1; }
+    if((coord.X + coord.Y) == 2) { diagRightCounter += (isTurnOfX) ? 1 : -1; }
 
     isTurnOfX = !isTurnOfX;
 
     /* if one of these flags is true, a straight line is formed */
-    rFlag = abs(rowCounter.at(y)) == BOARD_SIZE;
-    cFlag = abs(colCounter.at(x)) == BOARD_SIZE;
+    rFlag = abs(rowCounter.at(coord.Y)) == BOARD_SIZE;
+    cFlag = abs(colCounter.at(coord.X)) == BOARD_SIZE;
     dlFlag = abs(diagLeftCounter) == BOARD_SIZE;
     drFlag = abs(diagRightCounter) == BOARD_SIZE;
 
     /* define in which row or column the straight line is formed */
-    if(rFlag) { rPos == y; }
-    if(cFlag) { cPos == x; }
+    if(rFlag) { rPos == coord.Y; }
+    if(cFlag) { cPos == coord.X; }
 
     return (rFlag | cFlag | dlFlag | drFlag);
 
     return false;
 }
 
-void TicTacToe::undoMove(short x, short y)
+void TicTacToe::undoMove(COORD& toRemove)
 {
-    if(board.at(y).at(x) == ' ') { return; }
+    if(moveStack.empty()) { return; }
+
+    COORD lastMove(moveStack.top());
+    toRemove = lastMove;
+
+    moveStack.pop();
     
-    /* return to previous turn if current character is deleted */
-    isTurnOfX = board.at(y).at(x) == 'o';
-    board.at(y).at(x) = ' ';
+    board.at(lastMove.Y).at(lastMove.X) = ' ';
 
-    rowCounter.at(y) += (isTurnOfX) ? 1 : -1;
-    colCounter.at(x) += (isTurnOfX) ? 1 : -1;
+    rowCounter.at(lastMove.Y) += (isTurnOfX) ? 1 : -1;
+    colCounter.at(lastMove.X) += (isTurnOfX) ? 1 : -1;
 
-    if(x == y) { diagLeftCounter += (isTurnOfX) ? 1 : -1; }
-    if((x + y) == 2) { diagRightCounter += (isTurnOfX) ? 1 : -1; }
+    if(lastMove.X == lastMove.Y) { diagLeftCounter += (isTurnOfX) ? 1 : -1; }
+    if((lastMove.X + lastMove.Y) == 2) { diagRightCounter += (isTurnOfX) ? 1 : -1; }
 
     isTurnOfX = !isTurnOfX;
-}
-
-char TicTacToe::get(short x, short y) const
-{
-    return board.at(y).at(x);
 }

@@ -3,6 +3,9 @@
 #include <vector>
 #include <stdexcept>
 #include <exception>
+#include <stack>
+
+#include <windows.h>
 
 #ifndef TICTACTOE_H
 #define TICTACTOE_H
@@ -24,10 +27,11 @@ public:
 
     TicTacToe();
 
+    /* for access only (read-only) */
+    char get(COORD coord) const;
     /* FALSE = no winner; TRUE = a player wins */
-    bool makeMove(short x, short y);
-    void undoMove(short x, short y);
-    char get(short x, short y) const;
+    bool makeMove(COORD coord);
+    void undoMove(COORD& toRemove);
 
 private:
     /* the matrix representing the board */
@@ -40,6 +44,8 @@ private:
     int diagLeftCounter, diagRightCounter;      /* diagonals */
     /* turn flag */
     bool isTurnOfX;
+    /* last coord where the player made a move */
+    std::stack<COORD> moveStack;
 };
 
 #endif

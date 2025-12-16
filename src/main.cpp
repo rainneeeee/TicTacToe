@@ -74,20 +74,20 @@ static void printCaretOnBoard(HANDLE handle, const TicTacToe& t, const short& x,
     gotoBoardXY(handle, x, y);
 
     setHighlight(handle, true);
-    std::cout << ((t.get(x, y) != ' ') ? t.get(x, y) : '_');
+    std::cout << ((t.get({x, y}) != ' ') ? t.get({x, y}) : '_');
     setHighlight(handle, false);
 }
 
 static void clearCaret(HANDLE handle, const TicTacToe& t, const short& x, const short& y)
 {
     gotoBoardXY(handle, x, y);
-    if(t.get(x, y) == ' ') {
+    if(t.get({x, y}) == ' ') {
         std::cout << ' ';
         return;
     }
 
     setHighlight(handle, false);
-    std::cout << t.get(x, y);
+    std::cout << t.get({x, y});
 }
 
 static inline SHORT keyState(int&& vKey) { return GetAsyncKeyState(vKey) & MSB; }
@@ -109,14 +109,14 @@ static void arrowFunc(  HANDLE handle,
 
 static bool turnFunc(HANDLE handle, TicTacToe& t, const short& x, const short& y)
 {
-    if(t.get(x, y) != ' ') { return false; }
+    if(t.get({x, y}) != ' ') { return false; }
 
-    bool result = t.makeMove(x, y);
+    bool result = t.makeMove({x, y});
 
     gotoBoardXY(handle, x, y);
 
     setHighlight(handle, true);
-    std::cout << t.get(x, y);
+    std::cout << t.get({x, y});
     setHighlight(handle, false);
 
     return result;
@@ -132,25 +132,25 @@ static bool enterFunc(HANDLE handle, TicTacToe& t, const short& x, const short& 
     if(t.rFlag) {
         for(short i = 0; i < BOARD_SIZE; i++) {
             gotoBoardXY(handle, i, y);
-            std::cout << t.get(i, y);
+            std::cout << t.get({i, y});
         }
     }
     if(t.cFlag) {
         for(short i = 0; i < BOARD_SIZE; i++) {
             gotoBoardXY(handle, x, i);
-            std::cout << t.get(x, i);
+            std::cout << t.get({x, i});
         }
     }
     if(t.dlFlag) {
         for(short i = 0; i < BOARD_SIZE; i++) {
             gotoBoardXY(handle, i, i);
-            std::cout << t.get(i, i);
+            std::cout << t.get({i, i});
         }
     }
     if(t.drFlag) {
         for(short i = 0, j = 2; i < BOARD_SIZE; i++, j--) {
             gotoBoardXY(handle, j, i);
-            std::cout << t.get(j, i);
+            std::cout << t.get({j, i});
         }
     }
 
@@ -169,14 +169,15 @@ static bool enterFunc(HANDLE handle, TicTacToe& t, const short& x, const short& 
     return true;
 }
 
-static void backFunc(HANDLE handle, TicTacToe& t, const short& x, const short& y)
+static void backFunc(HANDLE handle, TicTacToe& t)
 {
-    t.undoMove(x, y);
+    COORD toRemove;
+    t.undoMove(toRemove);
 
-    gotoBoardXY(handle, x, y);
+    gotoBoardXY(handle, toRemove.X, toRemove.Y);
     
     setHighlight(handle, false);
-    std::cout << t.get(x, y);
+    std::cout << t.get(toRemove);
 }
 
 static void escFunc(HANDLE handle)
@@ -235,7 +236,8 @@ int main(void)
                 Sleep(150);
             }
             if(keyState(VK_BACK)) {
-                backFunc(hStdOut, t, x, y);
+                backFunc(hStdOut, t);
+                printCaretOnBoard(hStdOut, t, x, y);
                 Sleep(150);
             }
             if(keyState(VK_ESCAPE)) {
